@@ -42,8 +42,14 @@ app.use(function (req, res, next) {
 
 const indexRouter = require("./routes/index");
 const authRouter = require("./routes/auth");
+const eventsRouter = require("./routes/events");
+const sportsRouter = require("./routes/sports");
+const usersRouter = require("./routes/users");
 
 app.use("/", indexRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/events", eventsRouter);
+app.use("/api/sports", sportsRouter);
+app.use("/api/user", usersRouter);
 
 module.exports = app;
