@@ -18,7 +18,7 @@ const EventSchema = new Schema({
     type: Number,
   },
   individualNbrOfParticipants: [{ type: Schema.Types.ObjectId, ref: "User" }],
-  CollectiveArrayOfTeams: [{ type: Schema.Types.ObjectId, ref: "Team" }],
+  collectiveArrayOfTeams: [{ type: Schema.Types.ObjectId, ref: "Team" }],
   image: {
     type: String,
     default: "https://ev.12joursdaction.com/storage/app/logos/none.png",
