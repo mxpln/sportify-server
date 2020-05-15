@@ -13,12 +13,13 @@ const EventSchema = new Schema({
     type: String,
     enum: ["individual", "collective"],
   },
-  numberOfPlayersByTeam: { type: Number },
+  maxPlayersByTeam: { type: Number },
   maxPlayers: {
     type: Number,
   },
   individualNbrOfParticipants: [{ type: Schema.Types.ObjectId, ref: "User" }],
-  collectiveArrayOfTeams: [{ type: Schema.Types.ObjectId, ref: "Team" }],
+  teamA: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  teamB: [{ type: Schema.Types.ObjectId, ref: "User" }],
   image: {
     type: String,
     default: "https://ev.12joursdaction.com/storage/app/logos/none.png",
@@ -38,7 +39,6 @@ const EventSchema = new Schema({
   comments: [
     {
       message: String,
-
       author: { type: Schema.Types.ObjectId, ref: "User" },
     },
   ],

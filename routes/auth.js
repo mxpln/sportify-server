@@ -5,6 +5,9 @@ const User = require("../models/User");
 
 const salt = 10;
 
+// @desc      Signs in a user sending the user info
+// @route     /api/auth/signin
+// @verb      POST
 router.post("/signin", (req, res, next) => {
   const { email, password } = req.body;
   User.findOne({ email }).then((userDocument) => {
@@ -22,6 +25,9 @@ router.post("/signin", (req, res, next) => {
   });
 });
 
+// @desc      Signs up a user sending the user info
+// @route     /api/auth/signup
+// @verb      POST
 router.post("/signup", (req, res, next) => {
   const { email, password, firstName, lastName, preferences } = req.body;
   console.log(req.body);
@@ -49,6 +55,9 @@ router.post("/signup", (req, res, next) => {
   });
 });
 
+// @desc      Get’s the information of a user currently in the session
+// @route     /api/auth/isLoggedIn
+// @verb      GET
 router.get("/isLoggedIn", (req, res, next) => {
   if (req.session.currentUser) {
     const id = req.session.currentUser._id;
@@ -66,6 +75,9 @@ router.get("/isLoggedIn", (req, res, next) => {
   }
 });
 
+// @desc      Logs out a user, destroys the session
+// @route     /api/auth/logout
+// @verb      GET
 router.get("/logout", (req, res, next) => {
   req.session.destroy(function (error) {
     if (error) res.status(500).json(error);
