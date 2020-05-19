@@ -47,8 +47,9 @@ router.post("/signup", upload.single("image"), (req, res, next) => {
     lastName,
     preferences
   } = req.body;
-  console.log(req.body);
-  
+  console.log(req.body)
+
+
   User.findOne({
     email
   }).then((userDocument) => {
@@ -67,10 +68,12 @@ router.post("/signup", upload.single("image"), (req, res, next) => {
       preferences,
     };
     if (req.file) {
-      newUser.image = req.file.secure_url;
+      newUser.image = req.file.url;
     }
-  
+
+
     User.create(newUser).then((newUserDocument) => {
+      console.log(newUserDocument)
       const userObj = newUserDocument.toObject();
       delete userObj.password;
       req.session.currentUser = userObj;
