@@ -21,7 +21,9 @@ router.get("/", (req, res, next) => {
 // @route     /api/events/solo
 // @verb      GET
 router.get("/solo", (req, res, next) => {
-  Events.find({ type: "individual" })
+  Events.find({
+      type: "individual"
+    })
     .then((eventsDocument) => {
       res.status(200).json(eventsDocument);
     })
@@ -38,12 +40,21 @@ router.post("/solo/new", upload.single("image"), (req, res, next) => {
   const creator = req.session.currentUser._id;
   const individualNbrOfParticipants = [creator];
   const type = "individual";
-  const { title, description, sportType, date, maxPlayers, location } = req.body;
+  const {
+    title,
+    description,
+    sportType,
+    date,
+    level,
+    maxPlayers,
+    location
+  } = req.body;
   const newEvents = new Events({
     title,
     description,
     individualNbrOfParticipants,
     creator,
+    level,
     sportType,
     maxPlayers,
     type,
@@ -51,8 +62,8 @@ router.post("/solo/new", upload.single("image"), (req, res, next) => {
     location
   });
   if (req.file) {
-      newEvents.image = req.file.url;
-    }
+    newEvents.image = req.file.url;
+  }
   newEvents
     .save()
     .then((eventsDocument) => {
@@ -67,7 +78,9 @@ router.post("/solo/new", upload.single("image"), (req, res, next) => {
 // @route     /api/events/multi
 // @verb      GET
 router.get("/multi", (req, res, next) => {
-  Events.find({ type: "collective" })
+  Events.find({
+      type: "collective"
+    })
     .then((eventsDocument) => {
       res.status(200).json(eventsDocument);
     })
@@ -80,7 +93,7 @@ router.get("/multi", (req, res, next) => {
 // @route     /api/events/:id
 // @verb      GET
 router.get("/:id", (req, res, next) => {
-  Events.findById(req.params.id)
+  Events.findById(req.params.id).populate("sportType").populate("creator").populate("individualNbrOfParticipants").populate("teamA").populate("teamB")
     .then((eventsDocument) => {
       res.status(200).json(eventsDocument);
     })
@@ -97,7 +110,15 @@ router.post("/multi/new", upload.single("image"), (req, res, next) => {
   const creator = req.session.currentUser._id;
   const teamA = [creator];
   const type = "collective";
-  const { title, description, sportType, maxPlayersByTeam, date, location } = req.body;
+  const {
+    title,
+    description,
+    sportType,
+    maxPlayersByTeam,
+    date,
+    level,
+    location
+  } = req.body;
   const newEvents = new Events({
     title,
     description,
@@ -106,12 +127,13 @@ router.post("/multi/new", upload.single("image"), (req, res, next) => {
     teamA,
     sportType,
     type,
+    level,
     date,
     location
   });
   if (req.file) {
-      newEvents.image = req.file.url;
-    }
+    newEvents.image = req.file.url;
+  }
   newEvents
     .save()
     .then((eventsDocument) => {
@@ -126,7 +148,9 @@ router.post("/multi/new", upload.single("image"), (req, res, next) => {
 // @route     /api/events/:id
 // @verb      PATCH
 router.patch("/:id", (req, res, next) => {
-  Events.findByIdAndUpdate(req.params.id, req.body, { new: true })
+  Events.findByIdAndUpdate(req.params.id, req.body, {
+      new: true
+    })
     .then((eventsDocument) => {
       res.status(200).json(eventsDocument);
     })
@@ -171,7 +195,9 @@ router.post("/multi/:id/join", (req, res, next) => {
           },
         });
       } else {
-        res.status(500).json({ message: "error" });
+        res.status(500).json({
+          message: "error"
+        });
       }
       promise
         .then((eventsDocument) => {
@@ -190,29 +216,31 @@ router.post("/multi/:id/join", (req, res, next) => {
 // @route     /api/events/solo/:id/join
 // @verb      POST
 router.post("/solo/:id/join", (req, res, next) => {
-  Events.find({ type: "individual" })
+  Events.find({
+      type: "individual"
+    })
     .then(
       Events.findByIdAndUpdate(req.params.id, {
         $addToSet: {
           individualNbrOfParticipants: req.session.currentUser._id,
         },
       })
-        .then((dbResEvents) => {
-          User.findByIdAndUpdate(req.session.currentUser._id, {
+      .then((dbResEvents) => {
+        User.findByIdAndUpdate(req.session.currentUser._id, {
             $addToSet: {
               events: req.params.id,
             },
           })
-            .then((dbRes) => {
-              res.status(201).json(dbResEvents);
-            })
-            .catch((dbErr) => {
-              console.log(dbErr);
-            });
-        })
-        .catch((dbErr) => {
-          console.log(dbErr);
-        })
+          .then((dbRes) => {
+            res.status(201).json(dbResEvents);
+          })
+          .catch((dbErr) => {
+            console.log(dbErr);
+          });
+      })
+      .catch((dbErr) => {
+        console.log(dbErr);
+      })
     )
     .catch((err) => {
       res.status(500).json(err);
@@ -224,17 +252,17 @@ router.post("/solo/:id/join", (req, res, next) => {
 // @verb      DELETE
 router.post("/multi/:id/leave", (req, res) => {
   Events.findByIdAndUpdate(req.params.id, {
-    $pull: {
-      teamA: req.session.currentUser._id,
-      teamB: req.session.currentUser._id,
-    },
-  })
+      $pull: {
+        teamA: req.session.currentUser._id,
+        teamB: req.session.currentUser._id,
+      },
+    })
     .then((dbRes) => {
       User.findByIdAndUpdate(req.session.currentUser._id, {
-        $pull: {
-          events: req.params.id,
-        },
-      })
+          $pull: {
+            events: req.params.id,
+          },
+        })
         .then((dbResUser) => {
           res.status(201).json(dbRes);
           req.session.currentUser = dbResUser;
@@ -253,16 +281,16 @@ router.post("/multi/:id/leave", (req, res) => {
 // @verb      DELETE
 router.post("/solo/:id/leave", (req, res) => {
   Events.findByIdAndUpdate(req.params.id, {
-    $pull: {
-      individualNbrOfParticipants: req.session.currentUser._id,
-    },
-  })
+      $pull: {
+        individualNbrOfParticipants: req.session.currentUser._id,
+      },
+    })
     .then((dbRes) => {
       User.findByIdAndUpdate(req.session.currentUser._id, {
-        $pull: {
-          events: req.params.id,
-        },
-      })
+          $pull: {
+            events: req.params.id,
+          },
+        })
         .then((dbResUser) => {
           res.status(201).json(dbRes);
           req.session.currentUser = dbResUser;
@@ -297,10 +325,13 @@ router.get("/:id/chat", (req, res, next) => {
 router.post("/:id/chat", (req, res, next) => {
   const author = req.session.currentUser._id;
   Events.findByIdAndUpdate(req.params.id, {
-    $addToSet: {
-      comments: { message: req.body.message, author: author },
-    },
-  })
+      $addToSet: {
+        comments: {
+          message: req.body.message,
+          author: author
+        },
+      },
+    })
     .then((eventsDocument) => {
       res.status(201).json(eventsDocument);
     })
@@ -316,10 +347,16 @@ router.delete("/:id/chat/:commentId", (req, res, next) => {
   // const author = req.session.currentUser._id;
   const message = req.params.commentId;
   Events.findByIdAndUpdate(
-    req.params.id,
-    { $pull: { comments: { _id: message } } },
-    { new: true }
-  )
+      req.params.id, {
+        $pull: {
+          comments: {
+            _id: message
+          }
+        }
+      }, {
+        new: true
+      }
+    )
     .then((post) => {
       res.status(201).json(post);
     })
