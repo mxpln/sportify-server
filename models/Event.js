@@ -38,7 +38,7 @@ const EventSchema = new Schema({
     coordinates: {
       type: [Number],
     },
-    address: String,
+    formattedAddress: String,
   },
   creator: { type: Schema.Types.ObjectId, ref: "User" },
   comments: [
