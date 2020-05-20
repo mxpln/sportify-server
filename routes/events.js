@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Events = require("../models/Event");
 const User = require("../models/User");
+const upload = require("../config/cloudinary");
 
 // @desc      Get all the courses
 // @route     /api/events
@@ -32,21 +33,26 @@ router.get("/solo", (req, res, next) => {
 // @desc      Create a solo course
 // @route     /api/events/solo/new
 // @verb      POST
-router.post("/solo/new", (req, res, next) => {
+router.post("/solo/new", upload.single("image"), (req, res, next) => {
   // const sports = Sport.find()
   const creator = req.session.currentUser._id;
   const individualNbrOfParticipants = [creator];
   const type = "individual";
-  const { title, description, sportType, date } = req.body;
+  const { title, description, sportType, date, maxPlayers, location } = req.body;
   const newEvents = new Events({
     title,
     description,
     individualNbrOfParticipants,
     creator,
     sportType,
+    maxPlayers,
     type,
     date,
+    location
   });
+  if (req.file) {
+      newEvents.image = req.file.url;
+    }
   newEvents
     .save()
     .then((eventsDocument) => {
@@ -86,12 +92,12 @@ router.get("/:id", (req, res, next) => {
 // @desc      Create new collective course
 // @route     /api/events/multi/new
 // @verb      POST
-router.post("/multi/new", (req, res, next) => {
+router.post("/multi/new", upload.single("image"), (req, res, next) => {
   // const sports = Sport.find()
   const creator = req.session.currentUser._id;
   const teamA = [creator];
   const type = "collective";
-  const { title, description, sportType, maxPlayersByTeam, date } = req.body;
+  const { title, description, sportType, maxPlayersByTeam, date, location } = req.body;
   const newEvents = new Events({
     title,
     description,
@@ -101,7 +107,11 @@ router.post("/multi/new", (req, res, next) => {
     sportType,
     type,
     date,
+    location
   });
+  if (req.file) {
+      newEvents.image = req.file.url;
+    }
   newEvents
     .save()
     .then((eventsDocument) => {
