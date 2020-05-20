@@ -9,6 +9,11 @@ const EventSchema = new Schema({
     enum: ["beginner", "intermediate", "advanced"],
   },
   description: String,
+  image: {
+    type: String,
+    default:
+      "https://www.paysalia.com/sites/default/files/uploads/728x341-valorisation-sport-ubain.jpg",
+  },
   type: {
     type: String,
     enum: ["individual", "collective"],
