@@ -23,7 +23,7 @@ router.get("/", (req, res, next) => {
 router.get("/solo", (req, res, next) => {
   Events.find({
       type: "individual",
-    })
+    }).populate('creator').populate('individualNbrOfParticipants').populate('sportType')
     .then((eventsDocument) => {
       res.status(200).json(eventsDocument);
     })
@@ -80,7 +80,7 @@ router.post("/solo/new", upload.single("image"), (req, res, next) => {
 router.get("/multi", (req, res, next) => {
   Events.find({
       type: "collective",
-    })
+    }).populate('sportType')
     .then((eventsDocument) => {
       res.status(200).json(eventsDocument);
     })
