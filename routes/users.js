@@ -9,8 +9,12 @@ const Sport = require("../models/Sport");
 router.patch("/sports/:preferenceID", (req, res, next) => {
   const preferences = req.params.preferenceID;
   Users.findByIdAndUpdate(req.session.currentUser._id, {
-    $pull: { preferences: { _id: preferences } },
-  })
+      $pull: {
+        preferences: {
+          _id: preferences
+        }
+      },
+    })
     .then((usersDocument) => {
       res.status(200).json(usersDocument);
     })
@@ -24,6 +28,20 @@ router.patch("/sports/:preferenceID", (req, res, next) => {
 router.get("/sports", (req, res, next) => {
   Users.findById(req.session.currentUser._id)
     // .populate("preferences.favoriteSport")
+    .then((usersDocument) => {
+      res.status(200).json(usersDocument);
+    })
+    .catch((error) => {
+      res.status(500).json(error);
+    });
+});
+
+// @desc      Get all the user events
+// @route     /api/user/event
+// @verb      GET
+router.get("/events", (req, res, next) => {
+  Users.findById(req.session.currentUser._id)
+    .populate("events")
     .then((usersDocument) => {
       res.status(200).json(usersDocument);
     })
@@ -49,7 +67,9 @@ router.get("/:id", (req, res, next) => {
 // @route     /api/user/:id
 // @verb      PATCH
 router.patch("/:id", (req, res, next) => {
-  Users.findByIdAndUpdate(req.params.id, req.body, { new: true })
+  Users.findByIdAndUpdate(req.params.id, req.body, {
+      new: true
+    })
     .then((usersDocument) => {
       res.status(200).json(usersDocument);
     })

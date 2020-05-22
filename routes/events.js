@@ -22,8 +22,8 @@ router.get("/", (req, res, next) => {
 // @verb      GET
 router.get("/solo", (req, res, next) => {
   Events.find({
-    type: "individual",
-  })
+      type: "individual",
+    }).populate('creator').populate('individualNbrOfParticipants').populate('sportType')
     .then((eventsDocument) => {
       res.status(200).json(eventsDocument);
     })
@@ -79,8 +79,8 @@ router.post("/solo/new", upload.single("image"), (req, res, next) => {
 // @verb      GET
 router.get("/multi", (req, res, next) => {
   Events.find({
-    type: "collective",
-  })
+      type: "collective",
+    }).populate('sportType')
     .then((eventsDocument) => {
       res.status(200).json(eventsDocument);
     })
@@ -160,8 +160,8 @@ router.post("/multi/new", upload.single("image"), (req, res, next) => {
 // @verb      PATCH
 router.patch("/:id", (req, res, next) => {
   Events.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  })
+      new: true,
+    })
     .then((eventsDocument) => {
       res.status(200).json(eventsDocument);
     })
@@ -196,24 +196,24 @@ router.post("/multi/:id/join", (req, res, next) => {
         dbRes.teamB.length !== dbRes.maxPlayersByTeam
       ) {
         promise = Events.findByIdAndUpdate(
-          req.params.id,
-          {
+          req.params.id, {
             $addToSet: {
               teamB: req.session.currentUser._id,
             },
-          },
-          { new: true }
-        ).populate("teamB");
+          }, {
+            new: true
+          }
+        ).populate("teamB").populate('teamA');
       } else if (dbRes.teamA.length !== dbRes.maxPlayersByTeam) {
         promise = Events.findByIdAndUpdate(
-          req.params.id,
-          {
+          req.params.id, {
             $addToSet: {
               teamA: req.session.currentUser._id,
             },
-          },
-          { new: true }
-        ).populate("teamA");
+          }, {
+            new: true
+          }
+        ).populate("teamA").populate('teamB');
       } else {
         res.status(500).json({
           message: "error",
@@ -222,16 +222,19 @@ router.post("/multi/:id/join", (req, res, next) => {
       promise
         .then((eventsDocument) => {
           User.findByIdAndUpdate(
-            req.session.currentUser._id,
-            {
-              $addToSet: {
-                events: req.params.id,
-              },
-            },
-            { new: true }
-          )
+              req.session.currentUser._id, {
+                $addToSet: {
+                  events: req.params.id,
+                },
+              }, {
+                new: true
+              }
+            )
             .then((dbRes) => {
-              res.status(201).json({ dbRes, eventsDocument });
+              res.status(201).json({
+                dbRes,
+                eventsDocument
+              });
             })
             .catch((dbErr) => {
               console.log(dbErr);
@@ -250,63 +253,82 @@ router.post("/multi/:id/join", (req, res, next) => {
 // @route     /api/events/solo/:id/join
 // @verb      POST
 router.post("/solo/:id/join", (req, res, next) => {
-  Events.find({
-    type: "individual",
-  })
-    .then(
-      Events.findByIdAndUpdate(req.params.id, {
-        $addToSet: {
-          individualNbrOfParticipants: req.session.currentUser._id,
-        },
-      })
-        .then((dbResEvents) => {
-          User.findByIdAndUpdate(req.session.currentUser._id, {
-            $addToSet: {
-              events: req.params.id,
-            },
-          })
-            .then((dbRes) => {
-              res.status(201).json(dbResEvents);
-            })
-            .catch((dbErr) => {
-              console.log(dbErr);
-            });
+  // Events.find({
+  //     type: "individual",
+  //   })
+  //   .then(
+  Events.findByIdAndUpdate(req.params.id, {
+      $addToSet: {
+        individualNbrOfParticipants: req.session.currentUser._id,
+      }
+    }, {
+      new: true
+    }).populate('individualNbrOfParticipants')
+    .then((eventsDocument) => {
+      User.findByIdAndUpdate(req.session.currentUser._id, {
+          $addToSet: {
+            events: req.params.id,
+          },
+        }, {
+          new: true
+        })
+        .then((userDocument) => {
+          console.log("===========>", userDocument)
+          res.status(201).json({
+            eventsDocument,
+            userDocument
+          });
+          // req.session.currentUser = userDocument;
         })
         .catch((dbErr) => {
           console.log(dbErr);
-        })
-    )
-    .catch((err) => {
-      res.status(500).json(err);
-    });
+        });
+    })
+    .catch((dbErr) => {
+      console.log(dbErr);
+    })
+  // )
+  // .catch((err) => {
+  //   res.status(500).json(err);
+  // });
 });
 
 // @desc      Leave a collective course
 // @route     /api/events/multi/:id/leave
 // @verb      DELETE
+// @desc      Leave a collective course
+// @route     /api/events/multi/:id/leave
+// @verb      DELETE
 router.post("/multi/:id/leave", (req, res) => {
   Events.findByIdAndUpdate(
-    req.params.id,
-    {
-      $pull: {
-        teamA: req.session.currentUser._id,
-        teamB: req.session.currentUser._id,
-      },
-    },
-    { new: true }
-  )
+      req.params.id, {
+        $pull: {
+          teamA: req.session.currentUser._id,
+          teamB: req.session.currentUser._id,
+        },
+      }, {
+        new: true
+      }
+    )
     .populate("teamA")
     .populate("teamB")
-    .then((dbRes) => {
-      User.findByIdAndUpdate(req.session.currentUser._id, {
-        $pull: {
-          events: req.params.id,
-        },
-      })
+    .then((eventsDocument) => {
+      User.findByIdAndUpdate(
+          req.session.currentUser._id, {
+            $pull: {
+              events: req.params.id,
+            },
+          }, {
+            new: true
+          }
+        )
         .populate("events")
-        .then((dbResUser) => {
-          res.status(201).json(dbRes);
-          req.session.currentUser = dbResUser;
+        .then((updatedUser) => {
+          res.status(201).json({
+            eventsDocument,
+            updatedUser
+          });
+          req.session.currentUser = updatedUser;
         })
         .catch((err) => {
           res.status(500).json(err);
@@ -322,19 +344,26 @@ router.post("/multi/:id/leave", (req, res) => {
 // @verb      DELETE
 router.post("/solo/:id/leave", (req, res) => {
   Events.findByIdAndUpdate(req.params.id, {
-    $pull: {
-      individualNbrOfParticipants: req.session.currentUser._id,
-    },
-  })
-    .then((dbRes) => {
+      $pull: {
+        individualNbrOfParticipants: req.session.currentUser._id,
+      },
+    }, {
+      new: true
+    }).populate('individualNbrOfParticipants')
+    .then((eventsDocument) => {
       User.findByIdAndUpdate(req.session.currentUser._id, {
-        $pull: {
-          events: req.params.id,
-        },
-      })
-        .then((dbResUser) => {
-          res.status(201).json(dbRes);
-          req.session.currentUser = dbResUser;
+          $pull: {
+            events: req.params.id,
+          },
+        }, {
+          new: true
+        }).populate('events')
+        .then((userDocument) => {
+          res.status(201).json({
+            userDocument,
+            eventsDocument
+          });
+          req.session.currentUser = userDocument;
         })
         .catch((dbErr) => {
           console.log(dbErr);
@@ -366,13 +395,13 @@ router.get("/:id/chat", (req, res, next) => {
 router.post("/:id/chat", (req, res, next) => {
   const author = req.session.currentUser._id;
   Events.findByIdAndUpdate(req.params.id, {
-    $addToSet: {
-      comments: {
-        message: req.body.message,
-        author: author,
+      $addToSet: {
+        comments: {
+          message: req.body.message,
+          author: author,
+        },
       },
-    },
-  })
+    })
     .then((eventsDocument) => {
       res.status(201).json(eventsDocument);
     })
@@ -388,18 +417,16 @@ router.delete("/:id/chat/:commentId", (req, res, next) => {
   // const author = req.session.currentUser._id;
   const message = req.params.commentId;
   Events.findByIdAndUpdate(
-    req.params.id,
-    {
-      $pull: {
-        comments: {
-          _id: message,
+      req.params.id, {
+        $pull: {
+          comments: {
+            _id: message,
+          },
         },
-      },
-    },
-    {
-      new: true,
-    }
-  )
+      }, {
+        new: true,
+      }
+    )
     .then((post) => {
       res.status(201).json(post);
     })
