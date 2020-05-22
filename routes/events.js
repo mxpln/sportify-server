@@ -8,7 +8,7 @@ const upload = require("../config/cloudinary");
 // @route     /api/events
 // @verb      GET
 router.get("/", (req, res, next) => {
-  Events.find()
+  Events.find().populate('sportType')
     .then((eventsDocument) => {
       res.status(200).json(eventsDocument);
     })
