@@ -26,8 +26,8 @@ router.patch("/sports/:preferenceID", (req, res, next) => {
 // @route     /api/user/sports
 // @verb      GET
 router.get("/sports", (req, res, next) => {
-  Users.findById(req.session.currentUser._id)
-    // .populate("preferences.favoriteSport")
+  Users.findById(req.session.currentUser._id, "preferences")
+    .populate("preferences.favoriteSport")
     .then((usersDocument) => {
       res.status(200).json(usersDocument);
     })

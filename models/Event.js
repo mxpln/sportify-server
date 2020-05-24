@@ -29,7 +29,7 @@ const EventSchema = new Schema({
     type: String,
     default: "https://ev.12joursdaction.com/storage/app/logos/none.png",
   },
-  date:{type: Date, required: true },
+  date:{type: Date },
   location: {
     type: {
       type: String,
